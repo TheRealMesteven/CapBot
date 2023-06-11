@@ -14,7 +14,7 @@ namespace CapBot
 
         public override string HarmonyIdentifier()
         {
-            return "pokegustavo.CapBot";
+            return "pokegustavo.CapBot"; 
         }
     }
 }
