@@ -8,7 +8,7 @@ namespace CapBot.Routines
         internal static void CaptainOrders(PLPlayer __instance, ref float LastOrder, ref float LastAction, bool HasIntruders)
         {
             //Set captain orders and special actions
-            if (__instance.StartingShip == null || __instance.StartingShip.MyFlightAI = null || __instance.StartingShip.MyStats == null) return;
+            if (__instance.StartingShip == null || __instance.StartingShip.MyFlightAI == null || __instance.StartingShip.MyStats == null) return;
             if (__instance.StartingShip.MyFlightAI.cachedRepairDepotList.Count > 0 && __instance.StartingShip.MyStats.HullCurrent / __instance.StartingShip.MyStats.HullMax < 0.99f)//Repair procedures on repair station
             {
                 if (PLServer.Instance.CaptainsOrdersID != 9 && Time.time - LastOrder > 1f)

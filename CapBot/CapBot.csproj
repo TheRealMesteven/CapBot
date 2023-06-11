@@ -74,6 +74,10 @@
       <HintPath>lib\CrewAILibraryBuild.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="PilotAIBuild">
+      <HintPath>lib\PilotAIBuild.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="PulsarModLoader">
       <HintPath>lib\PulsarModLoader.dll</HintPath>
       <Private>False</Private>
