@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 namespace CapBot.Routines
@@ -104,7 +105,7 @@ namespace CapBot.Routines
                                             if (target.GetPlayer() != null && target.GetPlayer().name == "PreviewPlayer" || target.IsDead || target.GetIsFriendly()) continue;
                                             if (target.CurrentShip != null && target.CurrentShip != __instance.StartingShip && (((target is PLPawn) && (target as PLPawn).TeamID != 0) || target.GetPlayer() == null || target.GetPlayer().TeamID != 0))
                                             {
-                                                __instance.StartingShip.HostileShips.Add(target.CurrentShip.ShipID);
+                                                __instance.StartingShip.AddHostileShip(target.CurrentShip);
                                             }
                                             else if ((((target is PLPawn) && (target as PLPawn).TeamID != 0) || target.GetPlayer() == null || target.GetPlayer().TeamID != 0))
                                             {
@@ -701,6 +702,8 @@ namespace CapBot.Routines
         {
             if ((CapBot.StartingShip.HostileShips.Count > 1 || (CapBot.StartingShip.TargetShip != null && CapBot.StartingShip.TargetShip.GetCombatLevel() > CapBot.StartingShip.GetCombatLevel())) && CapBot.StartingShip.MyStats.HullCurrent / CapBot.StartingShip.MyStats.HullMax < 0.2f && !CapBot.StartingShip.InWarp && Time.time - LastBlindJump > 60)
             {
+                PulsarModLoader.Utilities.Logger.Info($"[CAPBOT] Blind Jump : {CapBot.StartingShip.HostileShips.Count} > 1 || {(CapBot.StartingShip.TargetShip != null && CapBot.StartingShip.TargetShip.GetCombatLevel() > CapBot.StartingShip.GetCombatLevel())}");
+                PulsarModLoader.Utilities.Logger.Info($"[CAPBOT] Blind Jump 2 : {CapBot.StartingShip.MyStats.HullCurrent / CapBot.StartingShip.MyStats.HullMax < 0.2f} && {!CapBot.StartingShip.InWarp} && {Time.time - LastBlindJump > 60}");
                 //Blind jump in emergency
                 CapBot.MyBot.AI_TargetPos = (CapBot.StartingShip.Spawners[4] as GameObject).transform.position;
                 CapBot.MyBot.AI_TargetPos_Raw = CapBot.MyBot.AI_TargetPos;

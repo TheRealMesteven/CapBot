@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 namespace CapBot.Routines
 {
@@ -21,7 +22,7 @@ namespace CapBot.Routines
                 {
                     if (ship.HostileShips.Contains(__instance.StartingShip.ShipID) || (ship.ShipTypeID == EShipType.E_BEACON && (ship as PLBeaconInfo).BeaconType == EBeaconType.E_WARP_DISABLE))
                     {
-                        __instance.StartingShip.HostileShips.Add(ship.ShipID);
+                        __instance.StartingShip.AddHostileShip(ship);
                     }
                 }
             }
