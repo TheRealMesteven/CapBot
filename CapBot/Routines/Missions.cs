@@ -604,12 +604,12 @@ namespace CapBot.Routines
                 AI.HighPriorityTarget = PLInGameUI.Instance.BossUI_Target;
             }
         }
-        internal static void Burrow(PLPlayer CapBot, ref float LastAction)
+        internal static bool Burrow(PLPlayer CapBot, ref float LastAction)
         {
             if (PLServer.Instance.IsFragmentCollected(1))
             {
                 LastAction = Time.time;
-                return;
+                return true;
             }
             if (PLServer.Instance.CurrentCrewCredits >= 100000)
             {
@@ -675,9 +675,10 @@ namespace CapBot.Routines
                 }
             }
             LastAction = Time.time;
+            return false;
         }
         static float WeaponsTest = Time.time;
-        internal static void WD_Weapons_Testing(PLPlayer CapBot)
+        internal static bool WD_Weapons_Testing(PLPlayer CapBot)
         {
             if (PLServer.GetCurrentSector() != null && PLServer.GetCurrentSector().VisualIndication == ESectorVisualIndication.WD_MISSIONCHAIN_WEAPONS_DEMO && !PLServer.Instance.HasCompletedMissionWithID(59682)) //In the W.D. Weapons testing mission 
             {
@@ -708,10 +709,11 @@ namespace CapBot.Routines
                     CapBot.MyBot.TickFindInvaderAction(null);
 
                 }
-                return;
+                return true;
             }
+            return false;
         }
-        internal static void Races(PLPlayer CapBot, ref float LastAction)
+        internal static bool Races(PLPlayer CapBot, ref float LastAction)
         {
             PLRace race = (Object.FindObjectOfType(typeof(PLRaceStartScreen)) as PLRaceStartScreen).MyRace;
             PLPickupComponent prize = Object.FindObjectOfType(typeof(PLPickupComponent)) as PLPickupComponent;
@@ -770,7 +772,7 @@ namespace CapBot.Routines
                         }
                     }
                     LastAction = Time.time;
-                    return;
+                    return true;
                 }
                 else if (race.RaceEnded && (PLServer.Instance.RacesWonBitfield & 1) != 0 && ((prize != null && !prize.PickedUp) || (PLServer.Instance.HasActiveMissionWithID(43499) && !PLServer.Instance.GetMissionWithID(43499).Ended) || (PLServer.Instance.HasActiveMissionWithID(43072) && !PLServer.Instance.GetMissionWithID(43072).Ended)))
                 {
@@ -824,7 +826,7 @@ namespace CapBot.Routines
                         }
                     }
                     LastAction = Time.time;
-                    return;
+                    return true;
                 }
             }
             else if (PLServer.GetCurrentSector().VisualIndication == ESectorVisualIndication.RACING_SECTOR_2 && race != null)
@@ -882,7 +884,7 @@ namespace CapBot.Routines
                         }
                     }
                     LastAction = Time.time;
-                    return;
+                    return true;
                 }
                 else if (race.RaceEnded && (PLServer.Instance.RacesWonBitfield & 2) != 0 && ((prize != null && !prize.PickedUp) || (PLServer.Instance.HasActiveMissionWithID(43932) && !PLServer.Instance.GetMissionWithID(43932).Ended) || (PLServer.Instance.HasActiveMissionWithID(43938) && !PLServer.Instance.GetMissionWithID(43938).Ended)))
                 {
@@ -936,7 +938,7 @@ namespace CapBot.Routines
                         }
                     }
                     LastAction = Time.time;
-                    return;
+                    return true;
                 }
             }
             else if (PLServer.GetCurrentSector().VisualIndication == ESectorVisualIndication.RACING_SECTOR_3 && race != null && (PLServer.Instance.RacesWonBitfield & 1) != 0 && (PLServer.Instance.RacesWonBitfield & 2) != 0)
@@ -994,7 +996,7 @@ namespace CapBot.Routines
                         }
                     }
                     LastAction = Time.time;
-                    return;
+                    return true;
                 }
                 else if (race.RaceEnded && (PLServer.Instance.RacesWonBitfield & 4) != 0 && ((prize != null && !prize.PickedUp) || (PLServer.Instance.HasActiveMissionWithID(44085) && !PLServer.Instance.GetMissionWithID(44085).Ended) || (PLServer.Instance.HasActiveMissionWithID(44088) && !PLServer.Instance.GetMissionWithID(44088).Ended)))
                 {
@@ -1048,9 +1050,10 @@ namespace CapBot.Routines
                         }
                     }
                     LastAction = Time.time;
-                    return;
+                    return true;
                 }
             }
+            return false;
         }
         internal static void HighRollers(PLPlayer CapBot)
         {
@@ -1149,9 +1152,8 @@ namespace CapBot.Routines
                     CapBot.CurrentlyInLiarsDiceGame = highRoller.BigGame;
                 }
             }
-            return;
         }
-        internal static void GreyHuntsmanHQ(PLPlayer __instance, ref float LastAction)
+        internal static bool GreyHuntsmanHQ(PLPlayer __instance, ref float LastAction)
         {
             if (PLServer.Instance.HasActiveMissionWithID(104869) && !PLServer.Instance.GetMissionWithID(104869).Ended && !PLServer.Instance.IsFragmentCollected(7))
             {
@@ -1178,8 +1180,9 @@ namespace CapBot.Routines
                     PLServer.Instance.CollectFragment(7);
                 }
                 LastAction = Time.time;
-                return;
+                return true;
             }
+            return false;
         }
     }
 }

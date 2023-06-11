@@ -76,7 +76,7 @@ namespace CapBot
                     case ESectorVisualIndication.AOG_HUB:
                     case ESectorVisualIndication.CORNELIA_HUB:
                     case ESectorVisualIndication.FLUFFY_FACTORY_01:
-                        Captain.GetSectorMissions(__instance, ref LastOrder, ref LastDestiny);
+                        if (Captain.GetSectorMissions(__instance, ref LastOrder, ref LastDestiny)) return;
                         Shop.BuyEssentials();
                         break;
                     case ESectorVisualIndication.EXOTIC1:
@@ -95,24 +95,24 @@ namespace CapBot
                         Shop.BuyEssentials();
                         break;
                     case ESectorVisualIndication.CYPHER_LAB:
-                        Captain.GetSectorMissions(__instance, ref LastOrder, ref LastDestiny);
+                        if (Captain.GetSectorMissions(__instance, ref LastOrder, ref LastDestiny)) return;
                         break;
                     case ESectorVisualIndication.DESERT_HUB:
-                        Missions.Burrow(__instance, ref LastAction);
+                        if (Missions.Burrow(__instance, ref LastAction)) return;
                         break;
                     case ESectorVisualIndication.RACING_SECTOR:
                     case ESectorVisualIndication.RACING_SECTOR_2:
                     case ESectorVisualIndication.RACING_SECTOR_3:
-                        Missions.Races(__instance, ref LastAction);
+                        if (Missions.Races(__instance, ref LastAction)) return;
                         break;
                     case ESectorVisualIndication.HIGHROLLERS_STATION:
                         Missions.HighRollers(__instance);
                         break;
                     case ESectorVisualIndication.WD_MISSIONCHAIN_WEAPONS_DEMO:
-                        Missions.WD_Weapons_Testing(__instance);
+                        if (Missions.WD_Weapons_Testing(__instance)) return;
                         break;
                     case ESectorVisualIndication.GREY_HUNTSMAN_HQ:
-                        Missions.GreyHuntsmanHQ(__instance, ref LastAction);
+                        if (Missions.GreyHuntsmanHQ(__instance, ref LastAction)) return;
                         break;
                 }
             }
