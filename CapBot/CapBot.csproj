@@ -37,6 +37,10 @@
     <Compile Include="Mod.cs" />
     <Compile Include="Patch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Routines\Captain.cs" />
+    <Compile Include="Routines\Hostiles.cs" />
+    <Compile Include="Routines\Missions.cs" />
+    <Compile Include="Routines\Shop.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -96,11 +100,11 @@
   </Target>
   <Target Name="DeployMod" AfterTargets="CopyMarkdownFiles" Condition="'$(PULSAR_PATH)' != ''">
     <Error Condition="!Exists('$(PULSAR_PATH)')" Text="PULSAR_PATH set but directory doesn't exist!  Ensure the path is right: PULSAR_PATH='$(PULSAR_PATH)'" />
-    <CombinePath BasePath="$(PULSAR_PATH)" Paths="PULSAR_LostColony_Data\Managed" >
-      <Output TaskParameter="CombinedPaths" PropertyName="ManagedDir"/>
+    <CombinePath BasePath="$(PULSAR_PATH)" Paths="PULSAR_LostColony_Data\Managed">
+      <Output TaskParameter="CombinedPaths" PropertyName="ManagedDir" />
     </CombinePath>
-    <CombinePath BasePath="$(PULSAR_PATH)" Paths="Mods" >
-      <Output TaskParameter="CombinedPaths" PropertyName="ModsDir"/>
+    <CombinePath BasePath="$(PULSAR_PATH)" Paths="Mods">
+      <Output TaskParameter="CombinedPaths" PropertyName="ModsDir" />
     </CombinePath>
     <CreateItem Include="$(TargetDir)\*.md">
       <Output TaskParameter="Include" ItemName="MarkdownFiles" />
