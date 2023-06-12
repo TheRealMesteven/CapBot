@@ -49,6 +49,8 @@ namespace CapBot
             }
             #endregion
 
+            if (__instance.GetPawn().MyController.AI_Item_Target == __instance.GetPawn().transform) __instance.GetPawn().MyController.PreAIPriorityTick();
+            if (__instance.GetPhotonPlayer() == null && PLNetworkManager.Instance.LocalPlayer != null) __instance.PhotonPlayer = PLNetworkManager.Instance.LocalPlayer.GetPhotonPlayer();
             Hostiles.CheckForHostiles(__instance, out bool HasIntruders);
             if (__instance.StartingShip != null && __instance.StartingShip.InWarp && PLServer.Instance.AllPlayersLoaded() && (__instance.StartingShip.MyShieldGenerator == null || __instance.StartingShip.MyStats.ShieldsCurrent / __instance.StartingShip.MyStats.ShieldsMax > 0.99))
                 PLInGameUI.Instance.WarpSkipButtonClicked(); //Skip warp when ready
@@ -69,7 +71,7 @@ namespace CapBot
                         Missions.WarpGuardianBattle(__instance);
                         return;
                     case ESectorVisualIndication.WASTEDWING:
-                        Missions.WastedWing(__instance);
+                        Missions.WastedWing(__instance, ref LastDestiny);
                         return;
                     case ESectorVisualIndication.COLONIAL_HUB:
                     case ESectorVisualIndication.WD_START:
@@ -159,6 +161,19 @@ namespace CapBot
         }
     }
 
+    [HarmonyPatch(typeof(PLBotController), "HandleMovement")]
+    class Rotation
+    {
+        static void Postfix(PLBotController __instance)
+        {
+            if (__instance.Bot_TargetXRot == 0f)
+            {
+                __instance.Bot_TargetXRot = __instance.TargetRot.eulerAngles.x;
+                __instance.StoredXRot = Mathf.LerpAngle(__instance.StoredXRot, __instance.Bot_TargetXRot, Time.deltaTime * 5f);
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(PLUIClassSelectionMenu), "Update")]
     class SpawnBot
     {
@@ -231,6 +246,20 @@ namespace CapBot
             if (PLNetworkManager.Instance.LocalPlayer != null && PhotonNetwork.isMasterClient && !inSCD.Component.Slot.Locked && SpawnBot.capisbot)
             {
                 PLDraggedShipCompUI.Instance.DraggedComponent = inSCD.Component;
+            }
+        }
+    }
+    [HarmonyPatch(typeof(PLTabMenu), "LocalPlayerCanEditTalentsOfPlayer")]
+    class TalentsOfBots
+    {
+        static void Postfix(PLPlayer inPlayer, ref bool __result)
+        {
+            if (PLNetworkManager.Instance != null && inPlayer != null && PLNetworkManager.Instance.LocalPlayer != null)
+            {
+                if (inPlayer.IsBot && inPlayer.TeamID == 0 && SpawnBot.capisbot && PhotonNetwork.isMasterClient)
+                {
+                    __result = true;
+                }
             }
         }
     }

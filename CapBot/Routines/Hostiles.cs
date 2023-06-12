@@ -8,7 +8,7 @@ namespace CapBot.Routines
         internal static void CheckForHostiles(PLPlayer __instance, out bool HasIntruders)
         {
             HasIntruders = false;
-            if (__instance.StartingShip != null) //Check for intruders and set hostile ships
+            if (__instance.StartingShip != null && !__instance.StartingShip.InWarp) //Check for intruders and set hostile ships
             {
                 foreach (PLPlayer player in PLServer.Instance.AllPlayers) // Find if there is intruders in the ship
                 {

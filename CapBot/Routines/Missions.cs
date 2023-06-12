@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static EventDelegate;
 
 namespace CapBot.Routines
 {
     internal class Missions
     {
+        static Vector3 targetPos = Vector3.zero;
+        static List<Vector3> targets = new List<Vector3>();
         internal static void LostColony(PLPlayer CapBot, ref float LastDestiny)
         {
             PLBot AI = CapBot.MyBot;
@@ -25,9 +28,9 @@ namespace CapBot.Routines
             PLContainmentSystem colonyDoor = Object.FindObjectOfType(typeof(PLContainmentSystem)) as PLContainmentSystem;
             if (!PLServer.AnyPlayerHasItemOfName("Facility Keycard")) //Step 1: Find facility key
             {
-                if (Time.time - LastDestiny > 10f)
+                if (targets.Count == 0)
                 {
-                    possibleTargets = new List<Vector3>()
+                    targets = new List<Vector3>()
                     {
                         new Vector3(1025,-516,476),
                         new Vector3(1054,-516,483),
@@ -39,16 +42,31 @@ namespace CapBot.Routines
                         new Vector3(1001,-515,443),
                         new Vector3(988,-517,494),
                     };
-                    AI.AI_TargetPos = possibleTargets[Random.Range(0, possibleTargets.Count - 1)];
+                    AI.AI_TargetPos = targets[Random.Range(0, targets.Count)];
                     AI.AI_TargetPos_Raw = AI.AI_TargetPos;
-                    LastDestiny = Time.time;
+                    targetPos = AI.AI_TargetPos;
+                }
+                if ((targetPos - pawn.transform.position).magnitude <= 3f)
+                {
+                    targets.Remove(targetPos);
+                    if (targets.Count > 0)
+                    {
+                        AI.AI_TargetPos = targets[Random.Range(0, targets.Count - 1)];
+                        AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                        targetPos = AI.AI_TargetPos;
+                    }
+                }
+                else
+                {
+                    AI.AI_TargetPos = targetPos;
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
                 }
             }
             else if (!PLServer.AnyPlayerHasItemOfName("Lower Facilities Keycard")) //Step 2: Find lower facility key
             {
-                if (Time.time - LastDestiny > 25f)
+                if (targets.Count == 0)
                 {
-                    possibleTargets = new List<Vector3>()
+                    targets = new List<Vector3>()
                     {
                         new Vector3(941,-497,468),
                         new Vector3(946,-517,503),
@@ -66,9 +84,24 @@ namespace CapBot.Routines
                         new Vector3(966,-511,526),
                         new Vector3(963,-505,562),
                     };
-                    AI.AI_TargetPos = possibleTargets[Random.Range(0, possibleTargets.Count - 1)];
+                    AI.AI_TargetPos = targets[Random.Range(0, targets.Count)];
                     AI.AI_TargetPos_Raw = AI.AI_TargetPos;
-                    LastDestiny = Time.time;
+                    targetPos = AI.AI_TargetPos;
+                }
+                if ((targetPos - pawn.transform.position).magnitude <= 3f)
+                {
+                    targets.Remove(targetPos);
+                    if (targets.Count > 0)
+                    {
+                        AI.AI_TargetPos = targets[Random.Range(0, targets.Count)];
+                        AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                        targetPos = AI.AI_TargetPos;
+                    }
+                }
+                else
+                {
+                    AI.AI_TargetPos = targetPos;
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
                 }
             }
             else if (colonyDoor != null && !colonyDoor.GetHasBeenCompleted()) //Step 3: Fix errors at locked door
@@ -157,6 +190,8 @@ namespace CapBot.Routines
                     {
                             item.PickupID
                     });
+                    PulsarModLoader.Utilities.Messaging.ChatMessage(PhotonTargets.All, $"I got the {item.GetItemName(true)}", CapBot.GetPlayerID());
+                    targets.Clear();
                 }
             }
         }
@@ -221,7 +256,7 @@ namespace CapBot.Routines
             }
 
         }
-        internal static void WastedWing(PLPlayer CapBot)
+        internal static void WastedWing(PLPlayer CapBot, ref float LastDestiny)
         {
             PLBot AI = CapBot.MyBot;
             PLPawn pawn = CapBot.GetPawn();
@@ -273,7 +308,7 @@ namespace CapBot.Routines
             if (!PLServer.AnyPlayerHasItemOfName("Entrance Security Keycard")) //Step 1: Find keycard
             {
                 PLRandomChildItem positions = null;
-                foreach (PLRandomChildItem teleport in Object.FindObjectsOfType(typeof(PLRandomChildItem)))
+                foreach (PLRandomChildItem teleport in Object.FindObjectsOfType<PLRandomChildItem>(true))
                 {
                     if (teleport.name == "KeycardRCI")
                     {
@@ -281,7 +316,7 @@ namespace CapBot.Routines
                         break;
                     }
                 }
-                if (positions != null && Time.time - lastChange > 60)
+                if (positions != null && (Time.time - LastDestiny > 60 || targetPos == Vector3.zero))
                 {
                     List<GameObject> keycards = new List<GameObject>();
                     foreach (PLPickupObject item in positions.gameObject.GetComponentsInChildren<PLPickupObject>(true))
@@ -290,10 +325,17 @@ namespace CapBot.Routines
                     }
                     AI.AI_TargetPos = keycards[Random.Range(0, keycards.Count - 1)].transform.position;
                     AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                    targetPos = AI.AI_TargetPos;
+                    LastDestiny = Time.time;
+                }
+                else if (targetPos != Vector3.zero)
+                {
+                    AI.AI_TargetPos = targetPos;
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
                 }
                 foreach (PLPickupObject inObj in PLGameStatic.Instance.m_AllPickupObjects)
                 {
-                    if ((pawn.transform.position - inObj.transform.position).magnitude < 8f)
+                    if ((pawn.transform.position - inObj.transform.position).magnitude < 8f && !inObj.PickedUp)
                     {
                         CapBot.photonView.RPC("AttemptToPickupObjectAtID", PhotonTargets.MasterClient, new object[]
                             {
@@ -304,20 +346,38 @@ namespace CapBot.Routines
                     }
                 }
             }
-            else if (FirstDoor != null && !FirstDoor.IsDoorOpen)//Step 2: Open the first containment door and entrance door
+            else if (FirstDoor != null && !FirstDoor.IsDoorOpen && pawn.transform.position.z > -140 && pawn.transform.position.y >= -102)//Step 2: Open the first containment door and entrance door
             {
                 AI.AI_TargetPos = new Vector3(58, -103, -97);
                 AI.AI_TargetPos_Raw = AI.AI_TargetPos;
-                if ((pawn.transform.position - AI.AI_TargetPos).magnitude < 8f && !EntranceDoor.IsOpen())
+                if ((pawn.transform.position - EntranceDoor.transform.position).magnitude < 8f && !EntranceDoor.IsOpen())
                 {
                     EntranceDoor.OpenDoor();
                 }
             }
             else if (SlimeDoors != null && !SlimeDoors.IsDoorOpen)//Step 3: Kill Experiment 72 
             {
-                if (pawn.Health / pawn.MaxHealth > 0.25f) AI.AI_TargetPos = new Vector3(59, -141, -184);
-                else AI.AI_TargetPos = new Vector3(60, -151, -186);
-                AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                if (pawn.transform.position.y < -120)
+                {
+                    if (pawn.Health / pawn.MaxHealth > 0.25f) AI.AI_TargetPos = new Vector3(59, -141, -184);
+                    else AI.AI_TargetPos = new Vector3(60, -151, -186);
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                }
+                else if (pawn.transform.position.y < -105 && pawn.transform.position.z > -232)
+                {
+                    AI.AI_TargetPos = new Vector3(52.2f, -121.5f, -198.2f);
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                }
+                else if (pawn.transform.position.y < -105)
+                {
+                    AI.AI_TargetPos = new Vector3(58f, -119f, -231f);
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                }
+                else
+                {
+                    AI.AI_TargetPos = new Vector3(47f, -111f, -248f);
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                }
             }
             else if (!PLServer.AnyPlayerHasItemOfName("Level 1 Admin Access Card"))//Step 4: Find keycard 1 
             {
@@ -330,7 +390,7 @@ namespace CapBot.Routines
                         break;
                     }
                 }
-                if (positions != null && Time.time - lastChange > 60)
+                if (positions != null && Time.time - LastDestiny > 60)
                 {
 
                     List<GameObject> keycards = new List<GameObject>();
@@ -340,11 +400,17 @@ namespace CapBot.Routines
                     }
                     AI.AI_TargetPos = keycards[Random.Range(0, keycards.Count - 1)].transform.position;
                     AI.AI_TargetPos_Raw = AI.AI_TargetPos;
-                    lastChange = Time.time;
+                    targetPos = AI.AI_TargetPos;
+                    LastDestiny = Time.time;
+                }
+                else if (targetPos != Vector3.zero)
+                {
+                    AI.AI_TargetPos = targetPos;
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
                 }
                 foreach (PLPickupObject inObj in PLGameStatic.Instance.m_AllPickupObjects)
                 {
-                    if ((pawn.transform.position - inObj.transform.position).magnitude < 8f)
+                    if ((pawn.transform.position - inObj.transform.position).magnitude < 8f && !inObj.PickedUp)
                     {
                         CapBot.photonView.RPC("AttemptToPickupObjectAtID", PhotonTargets.MasterClient, new object[]
                             {
@@ -385,7 +451,7 @@ namespace CapBot.Routines
                         break;
                     }
                 }
-                if (positions != null && Time.time - lastChange > 60)
+                if (positions != null && Time.time - LastDestiny > 60)
                 {
                     List<GameObject> keycards = new List<GameObject>();
                     foreach (PLPickupObject item in positions.gameObject.GetComponentsInChildren<PLPickupObject>(true))
@@ -394,11 +460,17 @@ namespace CapBot.Routines
                     }
                     AI.AI_TargetPos = keycards[Random.Range(0, keycards.Count - 1)].transform.position;
                     AI.AI_TargetPos_Raw = AI.AI_TargetPos;
-                    lastChange = Time.time;
+                    targetPos = AI.AI_TargetPos;
+                    LastDestiny = Time.time;
+                }
+                else if (targetPos != Vector3.zero)
+                {
+                    AI.AI_TargetPos = targetPos;
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
                 }
                 foreach (PLPickupObject inObj in PLGameStatic.Instance.m_AllPickupObjects)
                 {
-                    if ((pawn.transform.position - inObj.transform.position).magnitude < 8f)
+                    if ((pawn.transform.position - inObj.transform.position).magnitude < 8f && !inObj.PickedUp)
                     {
                         CapBot.photonView.RPC("AttemptToPickupObjectAtID", PhotonTargets.MasterClient, new object[]
                             {
@@ -426,7 +498,7 @@ namespace CapBot.Routines
                         break;
                     }
                 }
-                if (positions != null && Time.time - lastChange > 60)
+                if (positions != null && Time.time - LastDestiny > 60)
                 {
                     List<GameObject> keycards = new List<GameObject>();
                     foreach (PLPickupObject item in positions.gameObject.GetComponentsInChildren<PLPickupObject>(true))
@@ -435,11 +507,17 @@ namespace CapBot.Routines
                     }
                     AI.AI_TargetPos = keycards[Random.Range(0, keycards.Count - 1)].transform.position;
                     AI.AI_TargetPos_Raw = AI.AI_TargetPos;
-                    lastChange = Time.time;
+                    targetPos = AI.AI_TargetPos;
+                    LastDestiny = Time.time;
+                }
+                else if (targetPos != Vector3.zero)
+                {
+                    AI.AI_TargetPos = targetPos;
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
                 }
                 foreach (PLPickupObject inObj in PLGameStatic.Instance.m_AllPickupObjects)
                 {
-                    if ((pawn.transform.position - inObj.transform.position).magnitude < 8f)
+                    if ((pawn.transform.position - inObj.transform.position).magnitude < 8f && !inObj.PickedUp)
                     {
                         CapBot.photonView.RPC("AttemptToPickupObjectAtID", PhotonTargets.MasterClient, new object[]
                             {
@@ -548,7 +626,7 @@ namespace CapBot.Routines
                 }
                 foreach (PLPickupObject inObj in PLGameStatic.Instance.m_AllPickupObjects)
                 {
-                    if ((pawn.transform.position - inObj.transform.position).magnitude < 8f)
+                    if ((pawn.transform.position - inObj.transform.position).magnitude < 8f && !inObj.PickedUp)
                     {
                         CapBot.photonView.RPC("AttemptToPickupObjectAtID", PhotonTargets.MasterClient, new object[]
                             {
@@ -560,7 +638,7 @@ namespace CapBot.Routines
                 }
                 foreach (PLPickupRandomComponent component in Object.FindObjectsOfType(typeof(PLPickupRandomComponent)))
                 {
-                    if ((pawn.transform.position - component.transform.position).magnitude < 8f)
+                    if ((pawn.transform.position - component.transform.position).magnitude < 8f && !component.PickedUp)
                     {
                         CapBot.photonView.RPC("AttemptToPickupRandomComponentAtID", PhotonTargets.MasterClient, new object[]
                             {
@@ -577,7 +655,7 @@ namespace CapBot.Routines
                 AI.AI_TargetPos_Raw = AI.AI_TargetPos;
                 foreach (PLPickupObject inObj in PLGameStatic.Instance.m_AllPickupObjects)
                 {
-                    if ((pawn.transform.position - inObj.transform.position).magnitude < 8f)
+                    if ((pawn.transform.position - inObj.transform.position).magnitude < 8f && !inObj.PickedUp)
                     {
                         CapBot.photonView.RPC("AttemptToPickupObjectAtID", PhotonTargets.MasterClient, new object[]
                             {
