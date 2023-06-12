@@ -185,7 +185,6 @@ namespace CapBot.Routines
             }
             else if (colonyDoor != null && !colonyDoor.GetHasBeenCompleted()) //Step 3: Fix errors at locked door
             {
-                targets.Clear();
                 AI.AI_TargetPos = new Vector3(954, -534, 511);
                 AI.AI_TargetPos_Raw = AI.AI_TargetPos;
                 if ((pawn.transform.position - AI.AI_TargetPos).sqrMagnitude < 4 && !colonyDoor.HasStarted)
@@ -213,57 +212,8 @@ namespace CapBot.Routines
             }
             else if (PLLCChair.Instance != null && !PLLCChair.Instance.Triggered && PLLCChair.Instance.GetNumErrors(true) > 0) //Step 5: Fix screen erros at final door
             {
-                if (targets.Count == 0 && pawn.transform.position.y > -540.2f) // Manual Pathing
-                {
-                    PulsarModLoader.Utilities.Messaging.ChatMessage(PhotonTargets.All, "Going to the lowest level.", CapBot.GetPlayerID());
-                    targets = new List<Vector3>()
-                    {
-                        new Vector3(952.7f, -534.9f, 515.1f),
-                        new Vector3(960.6f, -535.2f, 547.6f),
-                        new Vector3(961.2f, -553.8f, 550.2f),
-                    };
-                    if (Random.Range(0, 2) == 0) targets.AddRange(new List<Vector3>()
-                    {
-                        new Vector3(956.1f, -535.1f, 548.3f),
-                        new Vector3(951.8f, -553.6f, 552.9f),
-                        new Vector3(953.4f, -553.6f, 554.3f),
-                        new Vector3(955.1f, -553.9f, 552.5f),
-                        new Vector3(956.8f, -553.9f, 554.3f),
-                        new Vector3(955.4f, -553.9f, 562.6f),
-                    });
-                    else targets.AddRange(new List<Vector3>()
-                    {
-                        new Vector3(965.0f, -535.1f, 546.4f),
-                        new Vector3(970.7f, -553.6f, 548.4f),
-                        new Vector3(970.0f, -553.6f, 550.3f),
-                        new Vector3(967.5f, -553.9f, 549.5f),
-                        new Vector3(966.7f, -553.9f, 551.8f),
-                        new Vector3(972.1f, -553.9f, 558.9f),
-                    });
-                    AI.AI_TargetPos = targets.First();
-                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
-                    targetPos = AI.AI_TargetPos;
-                }
                 AI.Tick_HelpWithChairSyncMiniGame(true);
                 LastDestiny = Time.time;
-                if (targets.Count > 0)
-                {
-                    if ((targetPos - pawn.transform.position).magnitude <= 3f)
-                    {
-                        targets.Remove(targetPos);
-                        if (targets.Count > 0)
-                        {
-                            AI.AI_TargetPos = targets.First();
-                            AI.AI_TargetPos_Raw = AI.AI_TargetPos;
-                            targetPos = AI.AI_TargetPos;
-                        }
-                    }
-                    else
-                    {
-                        AI.AI_TargetPos = targetPos;
-                        AI.AI_TargetPos_Raw = AI.AI_TargetPos;
-                    }
-                }
             }
             else if (PLLCChair.Instance != null && PLLCChair.Instance.GetNumErrors(true) <= 0 && PLLCChair.Instance.PlayerIDInChair != CapBot.GetPlayerID() && !PLLCChair.Instance.Triggered_LevelThree) //Step 6: Sit in the chair
             {
@@ -324,10 +274,10 @@ namespace CapBot.Routines
                 }
             }
             foreach (PLLockedSeamlessDoor pLLockedSeamlessDoor in PLLockedSeamlessDoor.AllDoors) if (pLLockedSeamlessDoor != null && !pLLockedSeamlessDoor.IsOpen() && PLServer.AnyPlayerHasItemOfName(pLLockedSeamlessDoor.RequiredItem) && (pLLockedSeamlessDoor.transform.position - pawn.transform.position).sqrMagnitude < 15)
-                {
-                    pLLockedSeamlessDoor.OpenDoor();
-                    Controller.FlagNoMovementForShortTime();
-                }
+            {
+                pLLockedSeamlessDoor.OpenDoor();
+                Controller.FlagNoMovementForShortTime();
+            }
         }
         internal static void WarpGuardianBattle(PLPlayer CapBot)
         {
