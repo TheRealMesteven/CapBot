@@ -1,4 +1,8 @@
 ﻿using PulsarModLoader;
+using System.Collections.Generic;
+using UnityEngine;
+using static PLBurrowArena;
+
 [assembly: System.Runtime.CompilerServices.IgnoresAccessChecksTo("Assembly-CSharp")]
 namespace CapBot
 {
@@ -15,6 +19,18 @@ namespace CapBot
         public override string HarmonyIdentifier()
         {
             return "pokegustavo.CapBot"; 
+        }
+    }
+    public class UsefulMethods
+    {
+        public static Vector3 GetClosestLocation(PLPlayer CapBot, List<Vector3> Locations)
+        {
+            Vector3 Closest = Locations[0];
+            foreach (Vector3 location in Locations)
+            {
+                if ((location - CapBot.GetPawn().transform.position).magnitude < (Closest - CapBot.GetPawn().transform.position).magnitude) Closest = location;
+            }
+            return Closest;
         }
     }
 }

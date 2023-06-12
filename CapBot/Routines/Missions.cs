@@ -1,18 +1,22 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static EventDelegate;
 
 namespace CapBot.Routines
 {
     internal class Missions
     {
+        static bool FoundKeycard = false;
+        static bool FoundKeycard2 = false;
+        static bool OpenedFaciltiyDoors = false;
+        static bool OpenedLowerFacilityDoors = false;
         static Vector3 targetPos = Vector3.zero;
         static List<Vector3> targets = new List<Vector3>();
         internal static void LostColony(PLPlayer CapBot, ref float LastDestiny)
         {
             PLBot AI = CapBot.MyBot;
             PLPawn pawn = CapBot.GetPawn();
+            PLBotController Controller = pawn.gameObject.GetComponent<PLBotController>();
             PLTeleportationLocationInstance planet = null;
             foreach (PLTeleportationLocationInstance teleport in Object.FindObjectsOfType(typeof(PLTeleportationLocationInstance)))
             {
@@ -24,12 +28,12 @@ namespace CapBot.Routines
             }
             if (planet == null || pawn == null) return;
             AI.AI_TargetTLI = planet;
-            List<Vector3> possibleTargets;
             PLContainmentSystem colonyDoor = Object.FindObjectOfType(typeof(PLContainmentSystem)) as PLContainmentSystem;
             if (!PLServer.AnyPlayerHasItemOfName("Facility Keycard")) //Step 1: Find facility key
             {
                 if (targets.Count == 0)
                 {
+                    PulsarModLoader.Utilities.Messaging.ChatMessage(PhotonTargets.All, "Starting search for the Facility Keycard.", CapBot.GetPlayerID());
                     targets = new List<Vector3>()
                     {
                         new Vector3(1025,-516,476),
@@ -42,7 +46,7 @@ namespace CapBot.Routines
                         new Vector3(1001,-515,443),
                         new Vector3(988,-517,494),
                     };
-                    AI.AI_TargetPos = targets[Random.Range(0, targets.Count)];
+                    AI.AI_TargetPos = UsefulMethods.GetClosestLocation(CapBot, targets);
                     AI.AI_TargetPos_Raw = AI.AI_TargetPos;
                     targetPos = AI.AI_TargetPos;
                 }
@@ -51,9 +55,46 @@ namespace CapBot.Routines
                     targets.Remove(targetPos);
                     if (targets.Count > 0)
                     {
-                        AI.AI_TargetPos = targets[Random.Range(0, targets.Count - 1)];
+                        AI.AI_TargetPos = UsefulMethods.GetClosestLocation(CapBot, targets);
                         AI.AI_TargetPos_Raw = AI.AI_TargetPos;
                         targetPos = AI.AI_TargetPos;
+                    }
+                }
+                else
+                {
+                    AI.AI_TargetPos = targetPos;
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                }
+            }
+            else if (!OpenedFaciltiyDoors && !PLServer.AnyPlayerHasItemOfName("Lower Facilities Keycard"))
+            {
+                if (!FoundKeycard)
+                {
+                    targets.Clear();
+                    FoundKeycard = true;
+                }
+                if (targets.Count == 0)
+                {
+                    PulsarModLoader.Utilities.Messaging.ChatMessage(PhotonTargets.All, "Opening doors with the Facility Keycard.", CapBot.GetPlayerID());
+                    targets = new List<Vector3>();
+                    foreach (PLLockedSeamlessDoor pLLockedSeamlessDoor in PLLockedSeamlessDoor.AllDoors) if (pLLockedSeamlessDoor != null && !pLLockedSeamlessDoor.IsOpen() && pLLockedSeamlessDoor.RequiredItem == "Facility Keycard") targets.Add(pLLockedSeamlessDoor.transform.position);
+                    AI.AI_TargetPos = UsefulMethods.GetClosestLocation(CapBot, targets);
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                    targetPos = AI.AI_TargetPos;
+                }
+                if ((targetPos - pawn.transform.position).magnitude <= 3f)
+                {
+                    targets.Remove(targetPos);
+                    Controller.FlagNoMovementForShortTime();
+                    if (targets.Count > 0)
+                    {
+                        AI.AI_TargetPos = UsefulMethods.GetClosestLocation(CapBot, targets);
+                        AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                        targetPos = AI.AI_TargetPos;
+                    }
+                    else
+                    {
+                        OpenedFaciltiyDoors = true;
                     }
                 }
                 else
@@ -66,6 +107,7 @@ namespace CapBot.Routines
             {
                 if (targets.Count == 0)
                 {
+                    PulsarModLoader.Utilities.Messaging.ChatMessage(PhotonTargets.All, "Starting search for the Lower Facilities Keycard.", CapBot.GetPlayerID());
                     targets = new List<Vector3>()
                     {
                         new Vector3(941,-497,468),
@@ -84,7 +126,7 @@ namespace CapBot.Routines
                         new Vector3(966,-511,526),
                         new Vector3(963,-505,562),
                     };
-                    AI.AI_TargetPos = targets[Random.Range(0, targets.Count)];
+                    AI.AI_TargetPos = UsefulMethods.GetClosestLocation(CapBot, targets);
                     AI.AI_TargetPos_Raw = AI.AI_TargetPos;
                     targetPos = AI.AI_TargetPos;
                 }
@@ -93,9 +135,46 @@ namespace CapBot.Routines
                     targets.Remove(targetPos);
                     if (targets.Count > 0)
                     {
-                        AI.AI_TargetPos = targets[Random.Range(0, targets.Count)];
+                        AI.AI_TargetPos = UsefulMethods.GetClosestLocation(CapBot, targets);
                         AI.AI_TargetPos_Raw = AI.AI_TargetPos;
                         targetPos = AI.AI_TargetPos;
+                    }
+                }
+                else
+                {
+                    AI.AI_TargetPos = targetPos;
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                }
+            }
+            else if (!OpenedLowerFacilityDoors)
+            {
+                if (!FoundKeycard2)
+                {
+                    targets.Clear();
+                    FoundKeycard2 = true;
+                }
+                if (targets.Count == 0)
+                {
+                    PulsarModLoader.Utilities.Messaging.ChatMessage(PhotonTargets.All, "Opening doors with the Lower Facilities Keycard.", CapBot.GetPlayerID());
+                    targets = new List<Vector3>();
+                    foreach (PLLockedSeamlessDoor pLLockedSeamlessDoor in PLLockedSeamlessDoor.AllDoors) if (pLLockedSeamlessDoor != null && !pLLockedSeamlessDoor.IsOpen() && pLLockedSeamlessDoor.RequiredItem == "Lower Facilities Keycard") targets.Add(pLLockedSeamlessDoor.transform.position);
+                    AI.AI_TargetPos = UsefulMethods.GetClosestLocation(CapBot, targets);
+                    AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                    targetPos = AI.AI_TargetPos;
+                }
+                if ((targetPos - pawn.transform.position).magnitude <= 3f)
+                {
+                    targets.Remove(targetPos);
+                    Controller.FlagNoMovementForShortTime();
+                    if (targets.Count > 0)
+                    {
+                        AI.AI_TargetPos = UsefulMethods.GetClosestLocation(CapBot, targets);
+                        AI.AI_TargetPos_Raw = AI.AI_TargetPos;
+                        targetPos = AI.AI_TargetPos;
+                    }
+                    else
+                    {
+                        OpenedLowerFacilityDoors = true;
                     }
                 }
                 else
@@ -128,6 +207,7 @@ namespace CapBot.Routines
             else if (!colonyDoor.ContainmentDoor.GetIsOpen()) //Step 4: Open the door
             {
                 colonyDoor.OpenContainmentDoorNow();
+                PulsarModLoader.Utilities.Messaging.ChatMessage(PhotonTargets.All, "I'm opening the Containment door!", CapBot.GetPlayerID());
                 LastDestiny = Time.time;
             }
             else if (PLLCChair.Instance != null && !PLLCChair.Instance.Triggered && PLLCChair.Instance.GetNumErrors(true) > 0) //Step 5: Fix screen erros at final door
@@ -191,9 +271,9 @@ namespace CapBot.Routines
                             item.PickupID
                     });
                     PulsarModLoader.Utilities.Messaging.ChatMessage(PhotonTargets.All, $"I got the {item.GetItemName(true)}", CapBot.GetPlayerID());
-                    targets.Clear();
                 }
             }
+            foreach (PLLockedSeamlessDoor pLLockedSeamlessDoor in PLLockedSeamlessDoor.AllDoors) if (pLLockedSeamlessDoor != null && !pLLockedSeamlessDoor.IsOpen() && PLServer.AnyPlayerHasItemOfName(pLLockedSeamlessDoor.RequiredItem) && (pLLockedSeamlessDoor.transform.position - pawn.transform.position).sqrMagnitude < 15) pLLockedSeamlessDoor.OpenDoor();
         }
         internal static void WarpGuardianBattle(PLPlayer CapBot)
         {
